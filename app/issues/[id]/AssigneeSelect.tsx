@@ -1,42 +1,33 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { Select } from "@radix-ui/themes";
-import { Issue, User } from "@prisma/client";
-import axios from "axios";
-import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/app/components";
+import { Issue, User } from "@prisma/client";
+import { Select } from "@radix-ui/themes";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 
 const AssigneeSelect = ({ issue }: { issue: Issue }) => {
-	const {
-		data: users,
-		error,
-		isLoading,
-	} = useQuery<User[]>({
-		queryKey: ["users"],
-		queryFn: () => axios.get("/api/users").then((res) => res.data),
-		staleTime: 60 * 1000, //data is cached for 60s, if page is refreshed cache is cleared
-		retry: 3,
-	});
+	const { data: users, error, isLoading } = useUsers();
 
 	if (isLoading) return <Skeleton />;
 
 	if (error) return null;
 
+	const assignIssue = (userId: string) => {
+		axios
+			.patch("/api/issues/" + issue.id, {
+				assignedToUserId: userId === "unassigned" ? null : userId,
+			})
+			.catch(() => {
+				toast.error("Changes could not be saved.");
+			});
+	};
+
 	return (
 		<>
 			<Select.Root
 				defaultValue={issue.assignedToUserId || "unassigned"}
-				onValueChange={(userId) => {
-					axios
-						.patch("/api/issues/" + issue.id, {
-							assignedToUserId:
-								userId === "unassigned" ? null : userId,
-						})
-						.catch(() => {
-							toast.error("Changes could not be saved.");
-						});
-				}}
+				onValueChange={assignIssue}
 			>
 				<Select.Trigger placeholder="Assign..." />
 				<Select.Content>
@@ -55,5 +46,14 @@ const AssigneeSelect = ({ issue }: { issue: Issue }) => {
 		</>
 	);
 };
+
+const useUsers = () =>
+	useQuery<User[]>({
+		queryKey: ["users"],
+		queryFn: () => axios.get("/api/users").then((res) => res.data),
+		staleTime: 60 * 1000, //data is cached for 60s,
+		//if page is refreshed cache is cleared,for Destine can probly set this to an hour
+		retry: 3,
+	});
 
 export default AssigneeSelect;
