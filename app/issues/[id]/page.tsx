@@ -14,9 +14,7 @@ interface Props {
 }
 
 // cache to improve performance
-const fetchUser = cache((issueId: number) =>
-	prisma.issue.findUnique({ where: { id: issueId } })
-);
+const fetchUser = cache((issueId: number) => prisma.issue.findUnique({ where: { id: issueId } }));
 
 const IssueDetailPage = async ({ params }: Props) => {
 	const session = await getServerSession(authOptions);
@@ -26,14 +24,14 @@ const IssueDetailPage = async ({ params }: Props) => {
 	if (!issue) notFound();
 
 	return (
-		<Grid columns={{ initial: "1", sm: "5" }} gap="5">
+		<Grid columns={{ initial: "1", sm: "5" }} gap='5'>
 			{/* col-span-4 takes 4 of the columns out of the 5 we allocated in the grid using md:5*/}
-			<Box className="md:col-span-4">
+			<Box className='md:col-span-4'>
 				<IssueDetails issue={issue} />
 			</Box>
 			{session && (
 				<Box>
-					<Flex direction="column" gap="4">
+					<Flex direction='column' gap='4'>
 						<AssigneeSelect issue={issue} />
 						<EditIssueButton issueId={issue.id} />
 						<DeleteIssueButton issueId={issue.id} />
